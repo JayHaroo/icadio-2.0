@@ -223,7 +223,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun speakDetectedObject() {
         if (detectedObjectName.isNotEmpty()) {
-            tts.speak(detectedObjectName, TextToSpeech.QUEUE_FLUSH, null, null)
+            // List of sentence templates
+            val sentences = listOf(
+                "There is a $detectedObjectName in front of you.",
+                "You are looking at a $detectedObjectName.",
+                "A $detectedObjectName is detected in front of you.",
+                "I see a $detectedObjectName in your view.",
+                "Watch out! There's a $detectedObjectName ahead.",
+                "You have a $detectedObjectName right in front of you.",
+                "Notice the $detectedObjectName in your surroundings.",
+                "There's a $detectedObjectName directly in your path.",
+                "A $detectedObjectName is within your sight.",
+                "Look ahead, there's a $detectedObjectName."
+            )
+
+            // Select a random sentence template
+            val randomSentence = sentences.random()
+
+            // Speak the sentence
+            tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
         }
     }
 
