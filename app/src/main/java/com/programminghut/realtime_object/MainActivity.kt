@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.hardware.camera2.*
-import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.speech.tts.TextToSpeech
@@ -17,13 +16,17 @@ import android.view.Window.*
 import android.view.WindowManager.LayoutParams.*
 import android.widget.ImageButton
 import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.programminghut.realtime_object.ml.SsdMobilenetV11Metadata1
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -93,11 +96,23 @@ class MainActivity : AppCompatActivity() {
         listenBTN.setOnClickListener {
             speakDetectedObject()
         }
+        listenBTN.setOnLongClickListener {
+            openWebsite()
+            true  // Returning true indicates the event is consumed, and no other click events will be triggered.
+        }
 
         val flashBTN: ImageView = findViewById(R.id.flashBTN)
         flashBTN.setOnClickListener {
             toggleFlash()
         }
+
+    }
+
+    private fun openWebsite() {
+        val url = "https://cf25-schools.vercel.app"
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        startActivity(intent)
     }
 
     override fun onDestroy() {
