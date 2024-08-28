@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openWebsite() {
-        val url = "https://cf25-schools.vercel.app"
+        val url = "https://icadio-web.vercel.app"
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(url)
         startActivity(intent)
