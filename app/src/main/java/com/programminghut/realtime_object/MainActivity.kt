@@ -29,7 +29,18 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.widget.TextView
+
+import android.widget.RelativeLayout
+
 class MainActivity : AppCompatActivity() {
+
+    //gesture
+    private lateinit var gestureDetector: GestureDetector
+    private lateinit var textView: TextView
+    private lateinit var rootLayout: RelativeLayout
 
     private lateinit var labels: List<String>
     private val colors = listOf(
@@ -48,6 +59,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tts: TextToSpeech
     private var detectedObjectName = ""
     private var isFlashOn = false
+    private var test = "asd"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         supportActionBar?.hide()
@@ -92,21 +104,52 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val listenBTN: ImageView = findViewById(R.id.listenBTN)
-        listenBTN.setOnClickListener {
-            speakDetectedObject()
-        }
-        listenBTN.setOnLongClickListener {
-            openWebsite()
-            true  // Returning true indicates the event is consumed, and no other click events will be triggered.
+        /*
+        *                               GESTURE FEATURE
+        * */
+        rootLayout = findViewById(R.id.rootLayout)
+        textView = findViewById(R.id.textView)
+        gestureDetector = GestureDetector(this, GestureListener())
+
+        rootLayout.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
         }
 
-        val flashBTN: ImageView = findViewById(R.id.flashBTN)
-        flashBTN.setOnClickListener {
-            toggleFlash()
-        }
+        /*
+        *                               GESTURE FEATURE
+        * */
 
     }
+
+    /*
+    *                               GESTURE FEATURE
+    * */
+    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+
+        override fun onDown(e: MotionEvent): Boolean {
+            return true // Required for GestureDetector to work
+        }
+
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
+             speakDetectedObject()
+            textView.text = "Caption: " + speakDetectedObject()
+            return true
+        }
+
+        override fun onLongPress(e: MotionEvent) {
+            openWebsite()
+        }
+
+        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+            toggleFlash()
+            return true
+        }
+    }
+
+    /*
+    *                               GESTURE FEATURE
+    * */
+
 
     private fun openWebsite() {
         val url = "https://icadio-web.vercel.app"
@@ -236,7 +279,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun speakDetectedObject() {
+    private fun speakDetectedObject(): String {
         if (detectedObjectName.isNotEmpty()) {
             // List of sentence templates
             val sentences = listOf(
@@ -257,7 +300,9 @@ class MainActivity : AppCompatActivity() {
 
             // Speak the sentence
             tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
+            return randomSentence;
         }
+        return "null";
     }
 
     private fun toggleFlash() {
