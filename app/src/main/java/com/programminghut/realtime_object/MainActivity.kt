@@ -24,6 +24,7 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,7 @@ import android.view.MotionEvent
 import android.widget.TextView
 
 import android.widget.RelativeLayout
+import androidx.annotation.RequiresApi
 
 class MainActivity : AppCompatActivity() {
 
@@ -61,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     private var isFlashOn = false
     private var test = "asd"
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         supportActionBar?.hide()
         super.onCreate(savedInstanceState)
@@ -88,6 +91,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSurfaceTextureDestroyed(p0: SurfaceTexture): Boolean = false
 
+            @RequiresApi(Build.VERSION_CODES.N)
             override fun onSurfaceTextureUpdated(p0: SurfaceTexture) {
                 processImage()
             }
@@ -131,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onSingleTapUp(e: MotionEvent): Boolean {
-             speakDetectedObject()
+            speakDetectedObject()
             textView.text = "Caption: " + speakDetectedObject()
             return true
         }
@@ -140,7 +144,12 @@ class MainActivity : AppCompatActivity() {
             openWebsite()
         }
 
-        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        override fun onFling(
+            p0: MotionEvent?,
+            e1: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
             toggleFlash()
             return true
         }
@@ -152,9 +161,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun openWebsite() {
-        val url = "https://icadio-web.vercel.app"
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(url)
+        val intent = Intent(this, OnlineMode::class.java)
         startActivity(intent)
     }
 
@@ -218,12 +225,14 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun getPermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 101)
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
@@ -231,6 +240,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun processImage() {
         try {
             bitmap = textureView.bitmap
@@ -253,6 +263,10 @@ class MainActivity : AppCompatActivity() {
             val w = mutable.width
             paint.textSize = h / 15f
             paint.strokeWidth = h / 85f
+
+            // Dictionary to keep track of detected object counts
+            val detectedObjects = mutableMapOf<String, Int>()
+
             scores.forEachIndexed { index, fl ->
                 if (fl > 0.65) {
                     val x = index * 4
@@ -263,36 +277,36 @@ class MainActivity : AppCompatActivity() {
                         paint
                     )
                     paint.style = Paint.Style.FILL
-                    canvas.drawText(
-                        labels[classes[index].toInt()],
-                        locations[x + 1] * w,
-                        locations[x] * h,
-                        paint
-                    )
-                    detectedObjectName = labels[classes[index].toInt()]
+                    val detectedObject = labels[classes[index].toInt()]
+                    canvas.drawText(detectedObject, locations[x + 1] * w, locations[x] * h, paint)
+
+                    // Add detected object to the dictionary
+                    detectedObjects[detectedObject] = detectedObjects.getOrDefault(detectedObject, 0) + 1
                 }
             }
 
             imageView.setImageBitmap(mutable)
+            detectedObjectName = detectedObjects.map { "${it.value} ${it.key}" }.joinToString(", ")
         } catch (e: Exception) {
             Log.e("MainActivity", "Error processing image", e)
         }
     }
+
 
     private fun speakDetectedObject(): String {
         if (detectedObjectName.isNotEmpty()) {
             // List of sentence templates
             val sentences = listOf(
                 "There is a $detectedObjectName in front of you.",
-                "You are looking at a $detectedObjectName.",
+                "You are looking at $detectedObjectName.",
                 "A $detectedObjectName is detected in front of you.",
-                "I see a $detectedObjectName in your view.",
-                "Watch out! There's a $detectedObjectName ahead.",
-                "You have a $detectedObjectName right in front of you.",
+                "I see $detectedObjectName in your view.",
+                "Watch out! There are $detectedObjectName ahead.",
+                "You have $detectedObjectName right in front of you.",
                 "Notice the $detectedObjectName in your surroundings.",
-                "There's a $detectedObjectName directly in your path.",
-                "A $detectedObjectName is within your sight.",
-                "Look ahead, there's a $detectedObjectName."
+                "There are $detectedObjectName directly in your path.",
+                "$detectedObjectName is within your sight.",
+                "Look ahead, there are $detectedObjectName."
             )
 
             // Select a random sentence template
@@ -300,9 +314,9 @@ class MainActivity : AppCompatActivity() {
 
             // Speak the sentence
             tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
-            return randomSentence;
+            return randomSentence
         }
-        return "null";
+        return "null"
     }
 
     private fun toggleFlash() {
