@@ -62,6 +62,17 @@ class MainActivity : AppCompatActivity() {
     private var detectedObjectName = ""
     private var isFlashOn = false
     private var test = "asd"
+    private var isDoubleTapped = false
+    private lateinit var repeatHandler: Handler
+    private val repeatRunnable = object : Runnable {
+        override fun run() {
+            if (isDoubleTapped) {
+                speakDetectedObject()
+                textView.text = "Caption: " + speakDetectedObject()
+                repeatHandler.postDelayed(this, 3000) // Repeat every 3 seconds
+            }
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,6 +84,7 @@ class MainActivity : AppCompatActivity() {
         labels = FileUtil.loadLabels(this, "labels.txt")
         imageProcessor = ImageProcessor.Builder().add(ResizeOp(300, 300, ResizeOp.ResizeMethod.BILINEAR)).build()
         model = SsdMobilenetV11Metadata1.newInstance(this)
+        repeatHandler = Handler()
 
         val handlerThread = HandlerThread("videoThread")
         handlerThread.start()
@@ -153,6 +165,19 @@ class MainActivity : AppCompatActivity() {
             toggleFlash()
             return true
         }
+
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            isDoubleTapped = !isDoubleTapped // Toggle on/off
+
+            if (isDoubleTapped) {
+                repeatHandler.post(repeatRunnable) // Start speaking every 3 seconds
+            } else {
+                repeatHandler.removeCallbacks(repeatRunnable) // Stop speaking
+            }
+
+            return true
+        }
+
     }
 
     /*
@@ -308,7 +333,6 @@ class MainActivity : AppCompatActivity() {
                 "$detectedObjectName is within your sight.",
                 "Look ahead, there are $detectedObjectName."
             )
-
             // Select a random sentence template
             val randomSentence = sentences.random()
 
@@ -316,6 +340,15 @@ class MainActivity : AppCompatActivity() {
             tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
             return randomSentence
         }
+        val sentences = listOf(
+            "There is nothing detected in front of you.",
+        )
+        // Select a random sentence template
+        val randomSentence = sentences.random()
+
+        // Speak the sentence
+        tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
+        return randomSentence
         return "null"
     }
 
