@@ -32,6 +32,7 @@ import java.util.*
 
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.widget.TextView
 
 import android.widget.RelativeLayout
@@ -69,10 +70,14 @@ class MainActivity : AppCompatActivity() {
             if (isDoubleTapped) {
                 speakDetectedObject()
                 textView.text = "Caption: " + speakDetectedObject()
-                repeatHandler.postDelayed(this, 3000) // Repeat every 3 seconds
+                repeatHandler.postDelayed(this, 4500) // Repeat every 3 seconds
             }
         }
     }
+    private lateinit var scaleGestureDetector: ScaleGestureDetector
+    private var currentZoomLevel = 1.0f
+    private var maxZoomLevel = 1.0f // This will be set based on camera capabilities
+
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         val handlerThread = HandlerThread("videoThread")
         handlerThread.start()
         handler = Handler(handlerThread.looper)
+        scaleGestureDetector = ScaleGestureDetector(this, ScaleListener())
 
         imageView = findViewById(R.id.imageView)
         textureView = findViewById(R.id.textureView)
@@ -183,6 +189,64 @@ class MainActivity : AppCompatActivity() {
     /*
     *                               GESTURE FEATURE
     * */
+
+    inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+
+        override fun onScale(detector: ScaleGestureDetector): Boolean {
+            try {
+                val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraManager.cameraIdList[0])
+                val zoomRange = cameraCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)
+                if (zoomRange != null) {
+                    maxZoomLevel = zoomRange
+
+                    // Calculate the new zoom level based on pinch gesture
+                    currentZoomLevel *= detector.scaleFactor
+                    currentZoomLevel = currentZoomLevel.coerceIn(1.0f, maxZoomLevel)
+
+                    val captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                    val zoomRect = getZoomRect(currentZoomLevel)
+                    captureRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoomRect)
+
+                    val surfaceTexture = textureView.surfaceTexture
+                    val surface = Surface(surfaceTexture)
+                    captureRequestBuilder.addTarget(surface)
+
+                    cameraDevice.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            session.setRepeatingRequest(captureRequestBuilder.build(), null, handler)
+                        }
+
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            Log.e("MainActivity", "Zoom configuration failed")
+                        }
+                    }, handler)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error handling zoom", e)
+            }
+            return true
+        }
+
+        // Calculate the zoom rect based on the zoom level
+        private fun getZoomRect(zoomLevel: Float): Rect {
+            val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraManager.cameraIdList[0])
+            val sensorRect = cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE) ?: return Rect()
+
+            val cropW = (sensorRect.width() / zoomLevel).toInt()
+            val cropH = (sensorRect.height() / zoomLevel).toInt()
+            val cropX = (sensorRect.width() - cropW) / 2
+            val cropY = (sensorRect.height() - cropH) / 2
+
+            return Rect(cropX, cropY, cropX + cropW, cropY + cropH)
+        }
+    }
+
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        scaleGestureDetector.onTouchEvent(event)
+        gestureDetector.onTouchEvent(event)
+        return super.onTouchEvent(event)
+    }
 
 
     private fun openWebsite() {
