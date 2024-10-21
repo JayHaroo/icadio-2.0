@@ -7,7 +7,6 @@ import android.graphics.*
 import android.hardware.camera2.*
 import android.os.Handler
 import android.os.HandlerThread
-import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.Surface
 import android.view.TextureView
@@ -29,12 +28,12 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import java.util.*
-
+import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.TextToSpeech
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.widget.TextView
-
 import android.widget.RelativeLayout
 import androidx.annotation.RequiresApi
 
@@ -65,18 +64,11 @@ class MainActivity : AppCompatActivity() {
     private var test = "asd"
     private var isDoubleTapped = false
     private lateinit var repeatHandler: Handler
-    private val repeatRunnable = object : Runnable {
-        override fun run() {
-            if (isDoubleTapped) {
-                speakDetectedObject()
-                textView.text = "Caption: " + speakDetectedObject()
-                repeatHandler.postDelayed(this, 4500) // Repeat every 3 seconds
-            }
-        }
-    }
     private lateinit var scaleGestureDetector: ScaleGestureDetector
     private var currentZoomLevel = 1.0f
     private var maxZoomLevel = 1.0f // This will be set based on camera capabilities
+    private var isSpeaking = false // Flag to track if TTS is speaking
+
 
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -121,10 +113,26 @@ class MainActivity : AppCompatActivity() {
             if (status == TextToSpeech.SUCCESS) {
                 tts.language = Locale.US
                 Log.d("MainActivity", "TTS initialized successfully")
+
+                // Set up the utterance progress listener
+                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {
+                        isSpeaking = true // Speech started
+                    }
+
+                    override fun onDone(utteranceId: String?) {
+                        isSpeaking = false // Speech finished
+                    }
+
+                    override fun onError(utteranceId: String?) {
+                        isSpeaking = false // Handle speech error
+                    }
+                })
             } else {
                 Log.e("MainActivity", "TTS initialization failed")
             }
         }
+
 
         /*
         *                               GESTURE FEATURE
@@ -174,13 +182,6 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
-
-            if (isDoubleTapped) {
-                repeatHandler.post(repeatRunnable) // Start speaking every 3 seconds
-            } else {
-                repeatHandler.removeCallbacks(repeatRunnable) // Stop speaking
-            }
-
             return true
         }
 
@@ -356,6 +357,8 @@ class MainActivity : AppCompatActivity() {
             // Dictionary to keep track of detected object counts
             val detectedObjects = mutableMapOf<String, Int>()
 
+            var hasDetectedObject = false // Flag to check if objects are detected
+
             scores.forEachIndexed { index, fl ->
                 if (fl > 0.65) {
                     val x = index * 4
@@ -371,16 +374,22 @@ class MainActivity : AppCompatActivity() {
 
                     // Add detected object to the dictionary
                     detectedObjects[detectedObject] = detectedObjects.getOrDefault(detectedObject, 0) + 1
+                    hasDetectedObject = true // Set flag if object is detected
                 }
             }
 
             imageView.setImageBitmap(mutable)
             detectedObjectName = detectedObjects.map { "${it.value} ${it.key}" }.joinToString(", ")
+
+            // If in automatic mode (double-tap) and an object is detected, speak
+            if (isDoubleTapped && hasDetectedObject && !isSpeaking) {
+                speakDetectedObject()
+                textView.text = "Caption: " + speakDetectedObject()
+            }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error processing image", e)
         }
     }
-
 
     private fun speakDetectedObject(): String {
         if (detectedObjectName.isNotEmpty()) {
@@ -400,20 +409,20 @@ class MainActivity : AppCompatActivity() {
             // Select a random sentence template
             val randomSentence = sentences.random()
 
-            // Speak the sentence
-            tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
+            // Speak the sentence with a unique utteranceId
+            tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, "object_detected_utterance")
             return randomSentence
         }
+
         val sentences = listOf(
             "There is nothing detected in front of you.",
         )
         // Select a random sentence template
         val randomSentence = sentences.random()
 
-        // Speak the sentence
-        tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, null)
+        // Speak the sentence with a unique utteranceId
+        tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, "nothing_detected_utterance")
         return randomSentence
-        return "null"
     }
 
     private fun toggleFlash() {
