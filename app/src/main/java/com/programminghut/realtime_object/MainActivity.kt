@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auto: TextView
     private lateinit var rootLayout: RelativeLayout
 
+    private lateinit var asd
+
     // cooldown
     private val cooldownPeriod = 5000L // 3 seconds in milliseconds
     private var lastSpeakTime = 0L
