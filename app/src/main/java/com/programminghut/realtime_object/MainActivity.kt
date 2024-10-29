@@ -42,7 +42,12 @@ class MainActivity : AppCompatActivity() {
     //gesture
     private lateinit var gestureDetector: GestureDetector
     private lateinit var textView: TextView
+    private lateinit var auto: TextView
     private lateinit var rootLayout: RelativeLayout
+
+    // cooldown
+    private val cooldownPeriod = 5000L // 3 seconds in milliseconds
+    private var lastSpeakTime = 0L
 
     private lateinit var labels: List<String>
     private val colors = listOf(
@@ -139,6 +144,7 @@ class MainActivity : AppCompatActivity() {
         * */
         rootLayout = findViewById(R.id.rootLayout)
         textView = findViewById(R.id.textView)
+        auto = findViewById(R.id.Automatic)
         gestureDetector = GestureDetector(this, GestureListener())
 
         rootLayout.setOnTouchListener { _, event ->
@@ -150,6 +156,8 @@ class MainActivity : AppCompatActivity() {
         * */
 
     }
+
+
 
     /*
     *                               GESTURE FEATURE
@@ -182,6 +190,10 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
+            if(isDoubleTapped)
+                auto.text = "Automatic"
+            else
+                auto.text = "Manual"
             return true
         }
 
@@ -383,8 +395,11 @@ class MainActivity : AppCompatActivity() {
 
             // If in automatic mode (double-tap) and an object is detected, speak
             if (isDoubleTapped && hasDetectedObject && !isSpeaking) {
-                speakDetectedObject()
-                textView.text = "Caption: " + speakDetectedObject()
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastSpeakTime >= cooldownPeriod) {
+                    lastSpeakTime = currentTime
+                    textView.text = "Caption: " + speakDetectedObject()
+                }
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error processing image", e)
