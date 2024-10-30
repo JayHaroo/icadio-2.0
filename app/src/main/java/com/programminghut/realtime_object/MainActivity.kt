@@ -45,8 +45,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auto: TextView
     private lateinit var rootLayout: RelativeLayout
 
-    private lateinit var asd
-
     // cooldown
     private val cooldownPeriod = 5000L // 3 seconds in milliseconds
     private var lastSpeakTime = 0L
@@ -170,7 +168,7 @@ class MainActivity : AppCompatActivity() {
             return true // Required for GestureDetector to work
         }
 
-        override fun onSingleTapUp(e: MotionEvent): Boolean {
+        override fun onSingleTapConfirmed (e: MotionEvent): Boolean {
             speakDetectedObject()
             textView.text = "Caption: " + speakDetectedObject()
             return true
@@ -192,10 +190,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
-            if(isDoubleTapped)
-                auto.text = "Automatic"
-            else
-                auto.text = "Manual"
+            auto.text = if(isDoubleTapped) "Automatic" else "Manual"
             return true
         }
 
