@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
-            auto.text = if(isDoubleTapped) "Automatic" else "Manual"
+            auto.text = if(isDoubleTapped) "Automatic" else "Manual "
             return true
         }
 
