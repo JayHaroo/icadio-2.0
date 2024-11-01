@@ -2,40 +2,44 @@ package com.programminghut.realtime_object
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.*
-import android.hardware.camera2.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.SurfaceTexture
+import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureRequest
+import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.Surface
 import android.view.TextureView
-import android.view.Window
-import android.view.Window.*
-import android.view.WindowManager.LayoutParams.*
-import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.RelativeLayout
+import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.programminghut.realtime_object.ml.SsdMobilenetV11Metadata1
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.view.View
-import androidx.appcompat.app.AppCompatActivity
-import java.util.*
-import android.speech.tts.UtteranceProgressListener
-import android.speech.tts.TextToSpeech
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
-import android.widget.TextView
-import android.widget.RelativeLayout
-import androidx.annotation.RequiresApi
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -190,7 +194,11 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
-            auto.text = if(isDoubleTapped) "Automatic" else "Manual "
+            auto.text = if(isDoubleTapped) "Automatic" else "Manual"
+            if(auto.text == "Manual"){
+                auto.setBackgroundColor(Color.parseColor("#884506"))
+            }
+            auto.setBackgroundColor(Color.parseColor("#a30401"))
             return true
         }
 
