@@ -16,7 +16,6 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -31,8 +30,8 @@ import android.view.TextureView
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import com.programminghut.realtime_object.ml.SsdMobilenetV11Metadata1
 import org.tensorflow.lite.support.common.FileUtil
@@ -78,10 +77,8 @@ class MainActivity : AppCompatActivity() {
     private var maxZoomLevel = 1.0f // This will be set based on camera capabilities
     private var isSpeaking = false // Flag to track if TTS is speaking
 
-
-
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         supportActionBar?.hide()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -110,7 +107,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSurfaceTextureDestroyed(p0: SurfaceTexture): Boolean = false
 
-            @RequiresApi(Build.VERSION_CODES.N)
+            @SuppressLint("NewApi")
             override fun onSurfaceTextureUpdated(p0: SurfaceTexture) {
                 processImage()
             }
@@ -194,7 +191,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
-            auto.text = if(isDoubleTapped) "Automatic" else "Manual"
+            auto.text = if(isDoubleTapped) "AUTOMATIC" else "AUTOMATIC"
             if(auto.text == "Manual"){
                 auto.setBackgroundColor(Color.parseColor("#884506"))
             }
@@ -332,14 +329,13 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @SuppressLint("NewApi")
     private fun getPermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 101)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
@@ -347,7 +343,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
+    @SuppressLint("NewApi")
     private fun processImage() {
         try {
             bitmap = textureView.bitmap

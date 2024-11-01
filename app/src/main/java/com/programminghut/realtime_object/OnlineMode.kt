@@ -5,29 +5,40 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
-import android.hardware.camera2.*
+import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureRequest
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.widget.TextView
-import android.os.VibrationEffect
-import android.os.Vibrator
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
-import okhttp3.*
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import android.view.Surface
-import java.util.*
+import java.util.Locale
 
 class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
 
@@ -50,6 +61,7 @@ class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var isFlashOn = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         supportActionBar?.hide()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_online_mode)

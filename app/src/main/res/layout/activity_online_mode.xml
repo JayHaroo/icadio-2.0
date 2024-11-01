@@ -55,7 +55,7 @@
         app:layout_constraintVertical_bias="0.986" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/Directs"
         android:layout_width="183dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
@@ -82,7 +82,7 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="11dp"
-        android:text="DIRECTION TO USE:\nTAP to Generate Caption\nSWIPE to toggle flash\nLONG PRESS to go online mode"
+        android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION \nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="18.5sp"

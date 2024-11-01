@@ -55,15 +55,15 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/textView"
+><TextView
+        android:id="@+id/Directs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="0dp"
         android:layout_marginBottom="11dp"
-        android:text="DIRECTION TO USE:\nTAP to Generate Caption\n DOUBLE TAP to automatic mode \nSWIPE to toggle flash\nLONG PRESS to go online mode"
+        android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION\n DOUBLE TAP TO AUTOMATIC MODE \nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="18.5sp"
@@ -74,24 +74,25 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="183dp"
+        android:id="@+id/Directs"
+        android:layout_width="185dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="false"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="209dp"
-        android:layout_marginEnd="18dp"
+        android:layout_marginStart="190dp"
+        android:layout_marginEnd="31dp"
         android:layout_marginBottom="600dp"
         android:background="#000000"
-        android:text="Offline Mode"
+        android:text="OFFLINE MODE"
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="@id/Automatic" />
+        app:layout_constraintTop_toTopOf="@id/Automatic"
+        tools:ignore="DuplicateIds" />
 
     <TextView
         android:id="@+id/Automatic"
@@ -105,7 +106,7 @@
         android:layout_marginEnd="210dp"
         android:layout_marginBottom="600dp"
         android:background="#884506"
-        android:text="Manual"
+        android:text="MANUAL"
         android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="20sp"
