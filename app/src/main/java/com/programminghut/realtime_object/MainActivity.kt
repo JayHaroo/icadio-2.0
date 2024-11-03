@@ -19,6 +19,9 @@ import android.hardware.camera2.CaptureRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -49,7 +52,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rootLayout: RelativeLayout
 
     // cooldown
-    private val cooldownPeriod = 5000L // 3 seconds in milliseconds
+    private val cooldownPeriod = 5000L // 5 seconds in milliseconds
     private var lastSpeakTime = 0L
 
     private lateinit var labels: List<String>
@@ -76,6 +79,9 @@ class MainActivity : AppCompatActivity() {
     private var currentZoomLevel = 1.0f
     private var maxZoomLevel = 1.0f // This will be set based on camera capabilities
     private var isSpeaking = false // Flag to track if TTS is speaking
+
+    private lateinit var speechRecognizer: SpeechRecognizer
+    private lateinit var speechRecognizerIntent: Intent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -137,9 +143,40 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Log.e("MainActivity", "TTS initialization failed")
             }
+
+            if (SpeechRecognizer.isRecognitionAvailable(this)) {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+                speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                }
+                speechRecognizer.setRecognitionListener(object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) {}
+                    override fun onBeginningOfSpeech() {}
+                    override fun onRmsChanged(rmsdB: Float) {}
+                    override fun onBufferReceived(buffer: ByteArray?) {}
+                    override fun onEndOfSpeech() {}
+                    override fun onError(error: Int) {}
+                    override fun onResults(results: Bundle?) {
+                        val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        if (matches != null) {
+                            for (result in matches) {
+                                if (result.equals("scan" , ignoreCase = true)) {
+                                    textView.text = "CAPTION: \n " + speakDetectedObject()
+                                    break
+                                }
+                            }
+                        }
+                        startListening() // Restart listening after each result
+                    }
+
+                    override fun onPartialResults(partialResults: Bundle?) {}
+                    override fun onEvent(eventType: Int, params: Bundle?) {}
+                })
+            }
+            startListening() // Start listening when the app opens
+
         }
-
-
         /*
         *                               GESTURE FEATURE
         * */
@@ -158,7 +195,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
+    private fun startListening() {
+        speechRecognizer.startListening(speechRecognizerIntent)
+    }
 
     /*
     *                               GESTURE FEATURE
@@ -171,7 +210,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onSingleTapConfirmed (e: MotionEvent): Boolean {
             speakDetectedObject()
-            textView.text = "Caption: " + speakDetectedObject()
+            textView.text = "CAPTION:\n" + speakDetectedObject()
             return true
         }
 
@@ -191,11 +230,12 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
             isDoubleTapped = !isDoubleTapped // Toggle on/off
-            auto.text = if(isDoubleTapped) "AUTOMATIC" else "AUTOMATIC"
-            if(auto.text == "Manual"){
+            auto.text = if (isDoubleTapped) "AUTOMATIC" else "MANUAL"
+            if (auto.text == "MANUAL") {
                 auto.setBackgroundColor(Color.parseColor("#884506"))
+            } else {
+                auto.setBackgroundColor(Color.parseColor("#a30401"))
             }
-            auto.setBackgroundColor(Color.parseColor("#a30401"))
             return true
         }
 
@@ -256,41 +296,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
         scaleGestureDetector.onTouchEvent(event)
-        gestureDetector.onTouchEvent(event)
-        return super.onTouchEvent(event)
-    }
-
-
-    private fun openWebsite() {
-        val intent = Intent(this, OnlineMode::class.java)
-        startActivity(intent)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        model.close()
-        tts.shutdown()
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
     }
 
     @SuppressLint("MissingPermission")
     private fun openCamera() {
         try {
             cameraManager.openCamera(cameraManager.cameraIdList[0], object : CameraDevice.StateCallback() {
-                override fun onOpened(p0: CameraDevice) {
+                override fun onOpened(camera: CameraDevice) {
                     Log.d("MainActivity", "Camera opened")
-                    cameraDevice = p0
+                    cameraDevice = camera
                     createCameraPreviewSession()
                 }
 
-                override fun onDisconnected(p0: CameraDevice) {
-                    Log.e("MainActivity", "Camera disconnected")
+                override fun onDisconnected(camera: CameraDevice) {
+                    Log.d("MainActivity", "Camera disconnected")
+                    camera.close()
                 }
 
-                override fun onError(p0: CameraDevice, p1: Int) {
-                    Log.e("MainActivity", "Camera error: $p1")
+                override fun onError(camera: CameraDevice, error: Int) {
+                    Log.d("MainActivity", "Camera error: $error")
+                    camera.close()
                 }
             }, handler)
         } catch (e: Exception) {
@@ -329,17 +357,94 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun toggleFlash() {
+        isFlashOn = !isFlashOn
+        createCameraPreviewSession()
+    }
+
+    private fun speakDetectedObject(): String {
+        if (detectedObjectName.isNotEmpty()) {
+            // Count detected objects for smarter sentence construction
+            val objects = detectedObjectName.split(", ")
+            val objectDescriptions = objects.map {
+                val parts = it.split(" ")
+                val count = parts[0].toInt()
+                val name = parts.subList(1, parts.size).joinToString(" ")
+                count to name
+            }
+
+            // Construct sentences based on detected objects
+            val sentences = mutableListOf<String>()
+            for ((count, name) in objectDescriptions) {
+                val sentence = when {
+                    count == 1 -> {
+                        listOf(
+                            "There's a single $name in front of you.",
+                            "I can see one $name nearby.",
+                            "A $name is directly ahead.",
+                            "You have a $name right in front of you."
+                        ).random()
+                    }
+                    count in 2..4 -> {
+                        listOf(
+                            "I see $count ${name}s nearby.",
+                            "There are a few ${name}s in your vicinity.",
+                            "You’re looking at $count ${name}s.",
+                            "I’ve detected $count ${name}s ahead."
+                        ).random()
+                    }
+                    count > 4 -> {
+                        listOf(
+                            "There are several ${name}s around you.",
+                            "I can spot many ${name}s in your view.",
+                            "You have a group of ${name}s nearby.",
+                            "There seems to be a crowd of ${name}s in front of you."
+                        ).random()
+                    }
+                    else -> {
+                        "An object is detected." // Default fallback in case of unexpected input
+                    }
+                }
+                sentences.add(sentence)
+            }
+
+            // Combine all sentences into one paragraph
+            val finalSentence = sentences.joinToString(" ")
+
+            // Speak the constructed sentence
+            tts.speak(finalSentence, TextToSpeech.QUEUE_FLUSH, null, "object_detected")
+            return finalSentence
+        }
+
+        // Default sentence if no object detected
+        val noObjectSentences = listOf(
+            "There’s currently nothing detected in front of you.",
+            "I’m not seeing any recognizable objects at the moment.",
+            "It looks clear, with no objects in your view.",
+            "Nothing appears to be directly ahead of you."
+        )
+        val noObjectSentence = noObjectSentences.random()
+        tts.speak(noObjectSentence, TextToSpeech.QUEUE_FLUSH, null, "nothing_detected")
+        return noObjectSentence
+    }
+
+
+    private fun openWebsite() {
+        val intent = Intent(this, OnlineMode::class.java)
+        startActivity(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        model.close()
+        tts.shutdown()
+        speechRecognizer.destroy()
+    }
+
     @SuppressLint("NewApi")
     private fun getPermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 101)
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            getPermission()
         }
     }
 
@@ -399,50 +504,11 @@ class MainActivity : AppCompatActivity() {
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - lastSpeakTime >= cooldownPeriod) {
                     lastSpeakTime = currentTime
-                    textView.text = "Caption: " + speakDetectedObject()
+                    textView.text = "CAPTION: \n " + speakDetectedObject()
                 }
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error processing image", e)
         }
-    }
-
-    private fun speakDetectedObject(): String {
-        if (detectedObjectName.isNotEmpty()) {
-            // List of sentence templates
-            val sentences = listOf(
-                "There is a $detectedObjectName in front of you.",
-                "You are looking at $detectedObjectName.",
-                "A $detectedObjectName is detected in front of you.",
-                "I see $detectedObjectName in your view.",
-                "Watch out! There are $detectedObjectName ahead.",
-                "You have $detectedObjectName right in front of you.",
-                "Notice the $detectedObjectName in your surroundings.",
-                "There are $detectedObjectName directly in your path.",
-                "$detectedObjectName is within your sight.",
-                "Look ahead, there are $detectedObjectName."
-            )
-            // Select a random sentence template
-            val randomSentence = sentences.random()
-
-            // Speak the sentence with a unique utteranceId
-            tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, "object_detected_utterance")
-            return randomSentence
-        }
-
-        val sentences = listOf(
-            "There is nothing detected in front of you.",
-        )
-        // Select a random sentence template
-        val randomSentence = sentences.random()
-
-        // Speak the sentence with a unique utteranceId
-        tts.speak(randomSentence, TextToSpeech.QUEUE_FLUSH, null, "nothing_detected_utterance")
-        return randomSentence
-    }
-
-    private fun toggleFlash() {
-        isFlashOn = !isFlashOn
-        createCameraPreviewSession()
     }
 }
