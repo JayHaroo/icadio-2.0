@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.programminghut.realtime_object
 
 import android.annotation.SuppressLint
@@ -31,6 +33,7 @@ import android.view.ScaleGestureDetector
 import android.view.Surface
 import android.view.TextureView
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -72,7 +75,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tts: TextToSpeech
     private var detectedObjectName = ""
     private var isFlashOn = false
-    private var test = "asd"
     private var isDoubleTapped = false
     private lateinit var repeatHandler: Handler
     private lateinit var scaleGestureDetector: ScaleGestureDetector
@@ -83,6 +85,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var speechRecognizerIntent: Intent
 
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         supportActionBar?.hide()
@@ -91,7 +95,7 @@ class MainActivity : AppCompatActivity() {
         getPermission()
 
         labels = FileUtil.loadLabels(this, "labels.txt")
-        imageProcessor = ImageProcessor.Builder().add(ResizeOp(300, 300, ResizeOp.ResizeMethod.BILINEAR)).build()
+        imageProcessor = ImageProcessor.Builder().add(ResizeOp(1280, 1280, ResizeOp.ResizeMethod.BILINEAR)).build()
         model = SsdMobilenetV11Metadata1.newInstance(this)
         repeatHandler = Handler()
 
@@ -136,6 +140,7 @@ class MainActivity : AppCompatActivity() {
                         isSpeaking = false // Speech finished
                     }
 
+                    @Deprecated("Deprecated in Java")
                     override fun onError(utteranceId: String?) {
                         isSpeaking = false // Handle speech error
                     }
@@ -157,6 +162,7 @@ class MainActivity : AppCompatActivity() {
                     override fun onBufferReceived(buffer: ByteArray?) {}
                     override fun onEndOfSpeech() {}
                     override fun onError(error: Int) {}
+                    @SuppressLint("SetTextI18n")
                     override fun onResults(results: Bundle?) {
                         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                         if (matches != null) {
@@ -180,7 +186,7 @@ class MainActivity : AppCompatActivity() {
         /*
         *                               GESTURE FEATURE
         * */
-        rootLayout = findViewById(R.id.rootLayout)
+        val rootLayout = findViewById<LinearLayout>(R.id.rootLayout)
         textView = findViewById(R.id.textView)
         auto = findViewById(R.id.Automatic)
         gestureDetector = GestureDetector(this, GestureListener())
@@ -208,6 +214,7 @@ class MainActivity : AppCompatActivity() {
             return true // Required for GestureDetector to work
         }
 
+        @SuppressLint("SetTextI18n")
         override fun onSingleTapConfirmed (e: MotionEvent): Boolean {
             speakDetectedObject()
             textView.text = "CAPTION:\n" + speakDetectedObject()
@@ -448,7 +455,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("NewApi")
+    @SuppressLint("NewApi", "SetTextI18n")
     private fun processImage() {
         try {
             bitmap = textureView.bitmap

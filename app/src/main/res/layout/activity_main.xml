@@ -1,115 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    tools:context=".MainActivity"
+    tools:ignore="ExtraText">
 
-    <TextureView
-        android:id="@+id/textureView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="377dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="-2dp"
-        android:layout_marginBottom="205dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="375dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="202dp"
-        android:background="#000" />
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="match_parent"
+            android:layout_height="91dp"
+            app:srcCompat="@drawable/logo" />
 
-    <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="match_parent"
-        android:layout_height="91dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="651dp"
-        app:srcCompat="@drawable/logo" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="match_parent"
-        android:layout_height="66dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="131dp"
-        android:background="#FFFC01"
-        android:text="CAPTION:"
-        android:textAlignment="center"
-        android:textColor="#000000"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/Automatic"
+                android:layout_width="187dp"
+                android:layout_height="wrap_content"
+                android:background="#884506"
+                android:text="MANUAL"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-><TextView
-        android:id="@+id/Directs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="11dp"
-        android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION\n DOUBLE TAP TO AUTOMATIC MODE \nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
-        android:textAlignment="center"
-        android:textColor="#000000"
-        android:textSize="18.5sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/offlineMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#000000"
+                android:text="OFFLINE MODE"
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:ignore="DuplicateIds" />
 
-    <TextView
-        android:id="@+id/Directs"
-        android:layout_width="185dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="false"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="190dp"
-        android:layout_marginEnd="31dp"
-        android:layout_marginBottom="600dp"
-        android:background="#000000"
-        android:text="OFFLINE MODE"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="@id/Automatic"
-        tools:ignore="DuplicateIds" />
+        </LinearLayout>
 
-    <TextView
-        android:id="@+id/Automatic"
-        android:layout_width="183dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="false"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="17dp"
-        android:layout_marginEnd="210dp"
-        android:layout_marginBottom="600dp"
-        android:background="#884506"
-        android:text="MANUAL"
-        android:textAlignment="center"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="404dp">
 
-</RelativeLayout>
+            <TextureView
+                android:id="@+id/textureView"
+                android:layout_width="match_parent"
+                android:layout_height="401dp" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="410dp" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="236dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="81dp"
+                android:layout_marginEnd="0dp"
+                android:background="#FFFC01"
+                android:paddingTop="5dp"
+                android:text="CAPTION:"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/directionText"
+                android:layout_width="match_parent"
+                android:layout_height="158dp"
+                android:paddingTop="10dp"
+                android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION\n DOUBLE TAP TO AUTOMATIC MODE \nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textSize="18.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout><![CDATA[
+
+
+
+    >
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]>
+</LinearLayout>
