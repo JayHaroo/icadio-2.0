@@ -32,9 +32,9 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.Surface
 import android.view.TextureView
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -52,7 +52,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
     private lateinit var textView: TextView
     private lateinit var auto: TextView
-    private lateinit var rootLayout: RelativeLayout
 
     // cooldown
     private val cooldownPeriod = 5000L // 5 seconds in milliseconds
@@ -89,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         supportActionBar?.hide()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -181,8 +181,8 @@ class MainActivity : AppCompatActivity() {
                 })
             }
             startListening() // Start listening when the app opens
-
         }
+
         /*
         *                               GESTURE FEATURE
         * */
