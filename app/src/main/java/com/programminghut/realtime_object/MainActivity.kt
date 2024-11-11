@@ -3,7 +3,6 @@
 package com.programminghut.realtime_object
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -18,9 +17,13 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -84,6 +87,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var speechRecognizer: SpeechRecognizer
     private lateinit var speechRecognizerIntent: Intent
 
+    private lateinit var vibrator: Vibrator
+
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,7 +128,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
 
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -183,6 +188,18 @@ class MainActivity : AppCompatActivity() {
             startListening() // Start listening when the app opens
         }
 
+        Log.d("MainActivity", "Initializing vibrator")
+        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+        Log.d("MainActivity", "Vibrator initialized")
+
+        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+
+
+
         /*
         *                               GESTURE FEATURE
         * */
@@ -201,6 +218,28 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun getVibrator(): Vibrator {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    private fun vibrateDevice(duration: Long) {
+        val vibrator = getVibrator()
+        if (vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                vibrator.vibrate(duration)
+            }
+        } else {
+            Log.e("MainActivity", "Device does not support vibration")
+        }
+    }
+
+
     private fun startListening() {
         speechRecognizer.startListening(speechRecognizerIntent)
     }
@@ -216,12 +255,14 @@ class MainActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun onSingleTapConfirmed (e: MotionEvent): Boolean {
+            vibrateDevice(100)
             speakDetectedObject()
             textView.text = "CAPTION:\n" + speakDetectedObject()
             return true
         }
 
         override fun onLongPress(e: MotionEvent) {
+            vibrateDevice(100)
             openWebsite()
         }
 
@@ -236,6 +277,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
+            vibrateDevice(100)
             isDoubleTapped = !isDoubleTapped // Toggle on/off
             auto.text = if (isDoubleTapped) "AUTOMATIC" else "MANUAL"
             if (auto.text == "MANUAL") {

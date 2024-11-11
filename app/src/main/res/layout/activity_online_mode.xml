@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#1D8A14"
-        android:text="Online Mode"
+        android:text="ONLINE MODE"
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
