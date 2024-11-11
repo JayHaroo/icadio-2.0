@@ -304,6 +304,7 @@ class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
             // Start MainActivity on long press
             val intent = Intent(this@OnlineMode, MainActivity::class.java)
             startActivity(intent)
+            textToSpeech.speak("Now in Offline Mode", TextToSpeech.QUEUE_FLUSH, null, null)
         }
 
         override fun onFling(

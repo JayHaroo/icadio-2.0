@@ -279,14 +279,21 @@ class MainActivity : AppCompatActivity() {
         override fun onDoubleTap(e: MotionEvent): Boolean {
             vibrateDevice(100)
             isDoubleTapped = !isDoubleTapped // Toggle on/off
+
+            // Update auto mode text
             auto.text = if (isDoubleTapped) "AUTOMATIC" else "MANUAL"
-            if (auto.text == "MANUAL") {
-                auto.setBackgroundColor(Color.parseColor("#884506"))
+
+            // Update direction text
+            val directionText = findViewById<TextView>(R.id.directionText)
+            directionText.text = if (isDoubleTapped) {
+                "DIRECTION TO USE:\nTAP TO GENERATE CAPTION\nDOUBLE TAP TO MANUAL MODE\nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
             } else {
-                auto.setBackgroundColor(Color.parseColor("#a30401"))
+                "DIRECTION TO USE:\nTAP TO GENERATE CAPTION\nDOUBLE TAP TO AUTOMATIC MODE\nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
             }
+
             return true
         }
+
 
     }
 
@@ -481,6 +488,7 @@ class MainActivity : AppCompatActivity() {
     private fun openWebsite() {
         val intent = Intent(this, OnlineMode::class.java)
         startActivity(intent)
+        tts.speak("Now in Online Mode", TextToSpeech.QUEUE_FLUSH, null, null)
     }
 
     override fun onDestroy() {
