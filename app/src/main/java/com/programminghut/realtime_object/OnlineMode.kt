@@ -172,6 +172,7 @@ class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun handleGenerateCaption() {
+        captionText.text = "GENERATING...."
         if (loading) return
 
         // Capture image from TextureView

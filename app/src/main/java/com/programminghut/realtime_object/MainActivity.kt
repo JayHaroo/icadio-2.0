@@ -21,6 +21,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -100,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         getPermission()
 
         labels = FileUtil.loadLabels(this, "labels.txt")
-        imageProcessor = ImageProcessor.Builder().add(ResizeOp(1280, 1280, ResizeOp.ResizeMethod.BILINEAR)).build()
+        imageProcessor = ImageProcessor.Builder().add(ResizeOp(640, 640, ResizeOp.ResizeMethod.BILINEAR)).build()
         model = SsdMobilenetV11Metadata1.newInstance(this)
         repeatHandler = Handler()
 
@@ -559,14 +560,25 @@ class MainActivity : AppCompatActivity() {
             }
 
             imageView.setImageBitmap(mutable)
-            detectedObjectName = detectedObjects.map { "${it.value} ${it.key}" }.joinToString(", ")
+
+            // Save detected objects temporarily
+            if (detectedObjects.isNotEmpty()) {
+                detectedObjectName = detectedObjects.map { "${it.value} ${it.key}" }.joinToString(", ")
+
+                // Reset detected objects after 1.5 seconds
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (detectedObjectName.isNotEmpty()) {
+                        detectedObjectName = "" // Reset the variable
+                    }
+                }, 1500)
+            }
 
             // If in automatic mode (double-tap) and an object is detected, speak
             if (isDoubleTapped && hasDetectedObject && !isSpeaking) {
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - lastSpeakTime >= cooldownPeriod) {
                     lastSpeakTime = currentTime
-                    textView.text = "CAPTION: \n " + speakDetectedObject()
+                    speakDetectedObject() // Speak detected objects
                 }
             }
         } catch (e: Exception) {
