@@ -21,7 +21,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -560,25 +559,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             imageView.setImageBitmap(mutable)
-
-            // Save detected objects temporarily
-            if (detectedObjects.isNotEmpty()) {
-                detectedObjectName = detectedObjects.map { "${it.value} ${it.key}" }.joinToString(", ")
-
-                // Reset detected objects after 1.5 seconds
-                Handler(Looper.getMainLooper()).postDelayed({
-                    if (detectedObjectName.isNotEmpty()) {
-                        detectedObjectName = "" // Reset the variable
-                    }
-                }, 1500)
-            }
+            detectedObjectName = detectedObjects.map { "${it.value} ${it.key}" }.joinToString(", ")
 
             // If in automatic mode (double-tap) and an object is detected, speak
             if (isDoubleTapped && hasDetectedObject && !isSpeaking) {
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - lastSpeakTime >= cooldownPeriod) {
                     lastSpeakTime = currentTime
-                    speakDetectedObject() // Speak detected objects
+                    textView.text = "CAPTION: \n " + speakDetectedObject()
                 }
             }
         } catch (e: Exception) {
