@@ -309,13 +309,17 @@ class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
 
         override fun onFling(
-            p0: MotionEvent?,
-            e1: MotionEvent,
+            e1: MotionEvent?,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {
-            toggleFlash()
-            return true
+            // Check if the swipe is predominantly horizontal
+            if (Math.abs(velocityX) > Math.abs(velocityY)) {
+                toggleFlash()
+                return true
+            }
+            return false // Ignore vertical flings
         }
     }
 

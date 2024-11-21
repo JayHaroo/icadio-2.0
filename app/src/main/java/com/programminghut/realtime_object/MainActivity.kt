@@ -1,10 +1,10 @@
-@file:Suppress("DEPRECATION")
-
 package com.programminghut.realtime_object
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -21,6 +21,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -39,6 +40,7 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -47,7 +49,9 @@ import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
+import java.lang.Math.abs
 import java.util.Locale
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -84,12 +88,12 @@ class MainActivity : AppCompatActivity() {
     private var maxZoomLevel = 1.0f // This will be set based on camera capabilities
     private var isSpeaking = false // Flag to track if TTS is speaking
 
-    private lateinit var speechRecognizer: SpeechRecognizer
+    private var speechRecognizer: SpeechRecognizer? = null
     private lateinit var speechRecognizerIntent: Intent
 
-    private lateinit var vibrator: Vibrator
 
 
+    @Suppress("DEPRECATION")
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -128,6 +132,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        if (isPhoneInWrongOrientation()) {
+            Toast.makeText(this, "Please use the app in Portrait mode.", Toast.LENGTH_SHORT).show()
+        }
+
         cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
 
         tts = TextToSpeech(this) { status ->
@@ -154,51 +162,52 @@ class MainActivity : AppCompatActivity() {
                 Log.e("MainActivity", "TTS initialization failed")
             }
 
+            fun isSimilar(input: String, target: String): Boolean {
+                // Calculate similarity using Levenshtein Distance or other algorithms
+                return input.lowercase().contains(target.lowercase())
+            }
+
             if (SpeechRecognizer.isRecognitionAvailable(this)) {
                 speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+                keepListening()
                 speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(
+                        RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                    )
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
                 }
-                speechRecognizer.setRecognitionListener(object : RecognitionListener {
-                    override fun onReadyForSpeech(params: Bundle?) {}
-                    override fun onBeginningOfSpeech() {}
-                    override fun onRmsChanged(rmsdB: Float) {}
-                    override fun onBufferReceived(buffer: ByteArray?) {}
-                    override fun onEndOfSpeech() {}
-                    override fun onError(error: Int) {}
-                    @SuppressLint("SetTextI18n")
-                    override fun onResults(results: Bundle?) {
-                        val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        if (matches != null) {
-                            for (result in matches) {
-                                if (result.equals("scan" , ignoreCase = true)) {
-                                    textView.text = "CAPTION: \n " + speakDetectedObject()
-                                    break
+                speechRecognizer?.run {
+                    setRecognitionListener(object : RecognitionListener {
+                        override fun onReadyForSpeech(params: Bundle?) {}
+                        override fun onBeginningOfSpeech() {}
+                        override fun onRmsChanged(rmsdB: Float) {}
+                        override fun onBufferReceived(buffer: ByteArray?) {}
+                        override fun onEndOfSpeech() {}
+                        override fun onError(error: Int) {}
+                        override fun onResults(results: Bundle?) {
+                            val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                            if (matches != null) {
+                                for (result in matches) {
+                                    Log.d("SpeechRecognition", "Recognized: $result")
+                                    if (isSimilar(result, "scan") || isSimilar(result, "detect")) {
+                                        val action = if (result.equals("scan", ignoreCase = true)) "Scan" else "Detect"
+                                        textView.text = "Detected command: $action. Proceeding..."
+                                        textView.text = "CAPTION: \n " + speakDetectedObject()
+                                        break
+                                    }
                                 }
                             }
+                            startListening() // Restart listening after each result
                         }
-                        startListening() // Restart listening after each result
-                    }
 
-                    override fun onPartialResults(partialResults: Bundle?) {}
-                    override fun onEvent(eventType: Int, params: Bundle?) {}
-                })
+                        override fun onPartialResults(partialResults: Bundle?) {}
+                        override fun onEvent(eventType: Int, params: Bundle?) {}
+                    })
+                }
             }
-            startListening() // Start listening when the app opens
+                startListening() // Start listening when the app opens // Start listening when the app opens
         }
-
-        Log.d("MainActivity", "Initializing vibrator")
-        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
-        Log.d("MainActivity", "Vibrator initialized")
-
-        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            getSystemService(VIBRATOR_SERVICE) as Vibrator
-        }
-
-
 
         /*
         *                               GESTURE FEATURE
@@ -212,95 +221,152 @@ class MainActivity : AppCompatActivity() {
             gestureDetector.onTouchEvent(event)
         }
 
-        /*
-        *                               GESTURE FEATURE
-        * */
-
     }
-
-    private fun getVibrator(): Vibrator {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
-            getSystemService(VIBRATOR_SERVICE) as Vibrator
-        }
-    }
-
-    private fun vibrateDevice(duration: Long) {
-        val vibrator = getVibrator()
-        if (vibrator.hasVibrator()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                vibrator.vibrate(duration)
-            }
-        } else {
-            Log.e("MainActivity", "Device does not support vibration")
-        }
-    }
-
 
     private fun startListening() {
-        speechRecognizer.startListening(speechRecognizerIntent)
+        Handler(Looper.getMainLooper()).post {
+            val recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            }
+            speechRecognizer?.startListening(recognizerIntent)
+        }
+    }
+
+    private fun keepListening() {
+        val handler = Handler(Looper.getMainLooper())
+        val restartInterval = 3000L // Restart every 10 seconds
+
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                if (speechRecognizer != null) {
+                    speechRecognizer?.cancel()
+                    startListening()
+                }
+                handler.postDelayed(this, restartInterval)
+            }
+        }, restartInterval)
+    }
+
+
+
+    private fun isPhoneInWrongOrientation(): Boolean {
+        val currentOrientation = resources.configuration.orientation
+
+        return when (currentOrientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                Log.e("OrientationCheck", "Phone is in Landscape orientation.")
+                tts.speak("Phone is in wrong orientation. Please rotate to portrait mode.", TextToSpeech.QUEUE_FLUSH, null, null)
+                true
+            }
+            Configuration.ORIENTATION_PORTRAIT -> {
+                Log.d("OrientationCheck", "Phone is in Portrait orientation.")
+                false
+            }
+            else -> {
+                Log.e("OrientationCheck", "Unknown orientation.")
+                tts.speak("Phone is in an unsupported orientation. Please rotate to portrait mode.", TextToSpeech.QUEUE_FLUSH, null, null)
+                true
+            }
+        }
+    }
+
+
+    fun vibrate(){
+        val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager =
+                getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE) )
+        }else{
+            @Suppress("DEPRECATION")
+            vib.vibrate(200)
+        }
     }
 
     /*
     *                               GESTURE FEATURE
     * */
+    @Suppress("DEPRECATION")
     inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
 
         override fun onDown(e: MotionEvent): Boolean {
-            return true // Required for GestureDetector to work
+            return true // Required for GestureDetector to recognize other gestures
         }
 
         @SuppressLint("SetTextI18n")
-        override fun onSingleTapConfirmed (e: MotionEvent): Boolean {
-            vibrateDevice(100)
-            speakDetectedObject()
-            textView.text = "CAPTION:\n" + speakDetectedObject()
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            vibrate() // Vibrate on single tap
+            val caption = speakDetectedObject() // Get the caption
+            textView.text = "CAPTION:\n$caption" // Update UI
             return true
         }
 
         override fun onLongPress(e: MotionEvent) {
-            vibrateDevice(100)
-            openWebsite()
+            openWebsite() // Trigger the website opening
         }
 
         override fun onFling(
-            p0: MotionEvent?,
-            e1: MotionEvent,
+            e1: MotionEvent?,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {
-            toggleFlash()
-            return true
+            // Check if the swipe is predominantly horizontal
+            if (abs(velocityX) > abs(velocityY)) {
+                toggleFlash()
+                return true
+            }
+            return false // Ignore vertical flings
         }
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
-            vibrateDevice(100)
-            isDoubleTapped = !isDoubleTapped // Toggle on/off
+            isDoubleTapped = !isDoubleTapped // Toggle between manual and automatic modes
 
+            if(isDoubleTapped){
+                tts.speak("Now in Automatic Mode", TextToSpeech.QUEUE_FLUSH, null, null)
+            }else{
+                tts.speak("Now in Manual Mode", TextToSpeech.QUEUE_FLUSH, null, null)
+            }
             // Update auto mode text
             auto.text = if (isDoubleTapped) "AUTOMATIC" else "MANUAL"
 
-            // Update direction text
+            // Update direction instructions
             val directionText = findViewById<TextView>(R.id.directionText)
             directionText.text = if (isDoubleTapped) {
-                "DIRECTION TO USE:\nTAP TO GENERATE CAPTION\nDOUBLE TAP TO MANUAL MODE\nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
+                """
+                DIRECTION TO USE:
+                TAP TO GENERATE CAPTION
+                DOUBLE TAP TO MANUAL MODE
+                SWIPE LEFT/RIGHT TO TOGGLE FLASH
+                LONG PRESS TO GO ONLINE MODE
+            """.trimIndent()
             } else {
-                "DIRECTION TO USE:\nTAP TO GENERATE CAPTION\nDOUBLE TAP TO AUTOMATIC MODE\nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
+                """
+                DIRECTION TO USE:
+                TAP TO GENERATE CAPTION
+                DOUBLE TAP TO AUTOMATIC MODE
+                SWIPE LEFT/RIGHT TO TOGGLE FLASH
+                LONG PRESS TO GO ONLINE MODE
+            """.trimIndent()
             }
 
             return true
         }
-
-
     }
+
 
     /*
     *                               GESTURE FEATURE
     * */
 
+    @Suppress("DEPRECATION")
     inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -322,15 +388,17 @@ class MainActivity : AppCompatActivity() {
                     val surface = Surface(surfaceTexture)
                     captureRequestBuilder.addTarget(surface)
 
-                    cameraDevice.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
-                        override fun onConfigured(session: CameraCaptureSession) {
-                            session.setRepeatingRequest(captureRequestBuilder.build(), null, handler)
-                        }
+                    cameraDevice.run {
+                        this.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
+                            override fun onConfigured(session: CameraCaptureSession) {
+                                session.setRepeatingRequest(captureRequestBuilder.build(), null, handler)
+                            }
 
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                            Log.e("MainActivity", "Zoom configuration failed")
-                        }
-                    }, handler)
+                            override fun onConfigureFailed(session: CameraCaptureSession) {
+                                Log.e("MainActivity", "Zoom configuration failed")
+                            }
+                        }, handler)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error handling zoom", e)
@@ -382,6 +450,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun createCameraPreviewSession() {
         try {
             val surfaceTexture = textureView.surfaceTexture
@@ -397,16 +466,18 @@ class MainActivity : AppCompatActivity() {
                 captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
             }
 
-            cameraDevice.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
-                override fun onConfigured(session: CameraCaptureSession) {
-                    Log.d("MainActivity", "Camera preview session configured")
-                    session.setRepeatingRequest(captureRequestBuilder.build(), null, handler)
-                }
+            cameraDevice.run {
+                this.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(session: CameraCaptureSession) {
+                        Log.d("MainActivity", "Camera preview session configured")
+                        session.setRepeatingRequest(captureRequestBuilder.build(), null, handler)
+                    }
 
-                override fun onConfigureFailed(session: CameraCaptureSession) {
-                    Log.e("MainActivity", "Camera preview session configuration failed")
-                }
-            }, handler)
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        Log.e("MainActivity", "Camera preview session configuration failed")
+                    }
+                }, handler)
+            }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error creating camera preview session", e)
         }
@@ -415,6 +486,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun toggleFlash() {
         isFlashOn = !isFlashOn
+        if(isFlashOn) {
+            tts.speak("Flash Opened", TextToSpeech.QUEUE_FLUSH, null, null)
+        }else {
+            tts.speak("Flash Closed", TextToSpeech.QUEUE_FLUSH, null, null)
+        }
         createCameraPreviewSession()
     }
 
@@ -495,19 +571,53 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         model.close()
         tts.shutdown()
-        speechRecognizer.destroy()
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+    }
+
+    private fun restartApp() {
+        val intent = Intent(this, MainActivity::class.java)
+        this.startActivity(intent)
+        this.finishAffinity()
     }
 
     @SuppressLint("NewApi")
     private fun getPermission() {
+        // List of permissions to request
+        val permissionsToRequest = mutableListOf<String>()
+
+        // Check for CAMERA permission
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 101)
+            permissionsToRequest.add(android.Manifest.permission.CAMERA)
         }
 
-        if (ContextCompat.checkSelfPermission(this,android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 101)
+        // Check for RECORD_AUDIO permission
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(android.Manifest.permission.RECORD_AUDIO)
         }
 
+        // Request permissions if any are missing
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissions(permissionsToRequest.toTypedArray(), 101)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            101 -> {
+                // Check if both permissions are granted
+                val cameraPermissionGranted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                val audioPermissionGranted = grantResults.isNotEmpty() && grantResults[1] == PackageManager.PERMISSION_GRANTED
+
+                if (!cameraPermissionGranted || !audioPermissionGranted) {
+                    // Handle the case where permissions are not granted (you could show a message)
+                    Toast.makeText(this, "Permissions are required to proceed", Toast.LENGTH_SHORT).show()
+                }else{
+                    restartApp()
+                }
+            }
+        }
     }
 
     @SuppressLint("NewApi", "SetTextI18n")
@@ -553,7 +663,9 @@ class MainActivity : AppCompatActivity() {
                     canvas.drawText(detectedObject, locations[x + 1] * w, locations[x] * h, paint)
 
                     // Add detected object to the dictionary
-                    detectedObjects[detectedObject] = detectedObjects.getOrDefault(detectedObject, 0) + 1
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        detectedObjects[detectedObject] = detectedObjects.getOrDefault(detectedObject, 0) + 1
+                    }
                     hasDetectedObject = true // Set flag if object is detected
                 }
             }

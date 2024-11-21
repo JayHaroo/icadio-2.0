@@ -51,7 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="11dp"
-        android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION \nSWIPE TO TOGGLE FLASH\nLONG PRESS TO GO OFFLINE MODE"
+        android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION \nSWIPE LEFT/RIGHT TO TOGGLE FLASH\nLONG PRESS TO GO OFFLINE MODE"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="18.5sp"
