@@ -15,46 +15,76 @@
     <ImageView
         android:id="@+id/imageView4"
         android:layout_width="match_parent"
-        android:layout_height="112dp"
+        android:layout_height="96dp"
         app:srcCompat="@drawable/logo" />
 
-    <TextView
-        android:id="@+id/Directs"
+    <ImageView
+        android:id="@+id/imageView9"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#1D8A14"
-        android:text="ONLINE MODE"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_height="32dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        app:srcCompat="@drawable/online" />
 
     <TextureView
         android:id="@+id/cameraPreview"
         android:layout_width="match_parent"
-        android:layout_height="391dp" />
+        android:layout_height="351dp" />
 
-    <TextView
-        android:id="@+id/captionText"
-        android:layout_width="match_parent"
-        android:layout_height="66dp"
-        android:background="#FFFC01"
-        android:text="CAPTION:"
-        android:textAlignment="center"
-        android:textColor="#000000"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/textView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="11dp"
-        android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION \nSWIPE LEFT/RIGHT TO TOGGLE FLASH\nLONG PRESS TO GO OFFLINE MODE"
-        android:textAlignment="center"
-        android:textColor="#000000"
-        android:textSize="18.5sp"
-        android:textStyle="bold" />
+        android:layout_marginTop="5dp"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/imageView8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                app:srcCompat="@drawable/bubble" />
+
+            <TextView
+                android:id="@+id/captionText"
+                android:layout_width="337dp"
+                android:layout_height="57dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:text="CAPTION:"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp">
+
+            <ImageView
+                android:id="@+id/imageView7"
+                android:layout_width="400dp"
+                android:layout_height="155dp"
+                android:layout_gravity="center"
+                app:srcCompat="@drawable/rect" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="11dp"
+                android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION \nSWIPE LEFT/RIGHT TO TOGGLE FLASH\nLONG PRESS TO GO OFFLINE MODE"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
 
 </LinearLayout>

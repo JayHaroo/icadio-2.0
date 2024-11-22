@@ -214,7 +214,6 @@ class MainActivity : AppCompatActivity() {
         * */
         val rootLayout = findViewById<LinearLayout>(R.id.rootLayout)
         textView = findViewById(R.id.textView)
-        auto = findViewById(R.id.Automatic)
         gestureDetector = GestureDetector(this, GestureListener())
 
         rootLayout.setOnTouchListener { _, event ->
@@ -335,7 +334,8 @@ class MainActivity : AppCompatActivity() {
                 tts.speak("Now in Manual Mode", TextToSpeech.QUEUE_FLUSH, null, null)
             }
             // Update auto mode text
-            auto.text = if (isDoubleTapped) "AUTOMATIC" else "MANUAL"
+            val manual = findViewById<ImageView>(R.id.Manual) // Specify the type explicitly
+            manual.setImageResource(if (isDoubleTapped) R.drawable.auto else R.drawable.manual)
 
             // Update direction instructions
             val directionText = findViewById<TextView>(R.id.directionText)

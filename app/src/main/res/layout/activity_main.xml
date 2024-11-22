@@ -17,43 +17,35 @@
         <ImageView
             android:id="@+id/imageView2"
             android:layout_width="match_parent"
-            android:layout_height="91dp"
+            android:layout_height="87dp"
+            android:layout_gravity="center_horizontal|center_vertical"
             app:srcCompat="@drawable/logo" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/Automatic"
-                android:layout_width="187dp"
+            <ImageView
+                android:id="@+id/Manual"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#884506"
-                android:text="MANUAL"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:clickable="false"
+                app:srcCompat="@drawable/manual" />
 
-            <TextView
-                android:id="@+id/offlineMode"
-                android:layout_width="match_parent"
+            <ImageView
+                android:id="@+id/imageView5"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#000000"
-                android:text="OFFLINE MODE"
-                android:textAlignment="center"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                tools:ignore="DuplicateIds" />
-
+                android:layout_weight="1"
+                app:srcCompat="@drawable/offline" />
         </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="404dp">
+            android:layout_height="351dp"
+            android:layout_marginTop="5dp">
 
             <TextureView
                 android:id="@+id/textureView"
@@ -68,32 +60,59 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="236dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="match_parent"
-                android:layout_height="81dp"
-                android:layout_marginEnd="0dp"
-                android:background="#FFFC01"
-                android:paddingTop="5dp"
-                android:text="CAPTION:"
-                android:textAlignment="center"
-                android:textColor="#000000"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <FrameLayout
+                android:layout_width="417dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
 
-            <TextView
-                android:id="@+id/directionText"
+                <ImageView
+                    android:id="@+id/imageView6"
+                    android:layout_width="341dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_horizontal"
+                    app:srcCompat="@drawable/bubble" />
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="310dp"
+                    android:layout_height="65dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="25dp"
+                    android:text="CAPTION:"
+                    android:textAlignment="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+            </FrameLayout>
+
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="158dp"
-                android:paddingTop="10dp"
-                android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION\n DOUBLE TAP TO AUTOMATIC MODE \nSWIPE LEFT/RIGHT TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
-                android:textAlignment="center"
-                android:textColor="#000000"
-                android:textSize="18.5sp"
-                android:textStyle="bold" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp">
+
+                <ImageView
+                    android:id="@+id/imageView7"
+                    android:layout_width="500dp"
+                    android:layout_height="150dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/rect" />
+
+                <TextView
+                    android:id="@+id/directionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="15dp"
+                    android:text="DIRECTION TO USE:\nTAP TO GENERATE CAPTION\n DOUBLE TAP TO AUTOMATIC MODE \nSWIPE LEFT/RIGHT TO TOGGLE FLASH\nLONG PRESS TO GO ONLINE MODE"
+                    android:textAlignment="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
         </LinearLayout>
 
     </LinearLayout><![CDATA[

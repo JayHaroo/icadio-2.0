@@ -212,7 +212,7 @@ class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
                             val jsonObject = JSONObject(result)
                             val caption = jsonObject.getString("caption")
                             setCaption(caption)
-                            setText(caption)
+                            setText("CAPTION: \n" + caption)
 
                             // Speak the caption using TTS
                             speakCaption(caption)
@@ -336,7 +336,6 @@ class OnlineMode : AppCompatActivity(), TextToSpeech.OnInitListener {
             }
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
